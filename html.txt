@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Express Kitchen Marketing</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        input, textarea, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
+        .preview { margin-top: 20px; }
+        video { width: 100%; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Upload Instructions & Images</h2>
+        <input type="file" id="imageUpload" accept="image/*">
+        <textarea id="instructions" placeholder="Enter video instructions..."></textarea>
+        <button onclick="generateContent()">Submit</button>
+        <div class="preview" id="preview"></div>
+        <button onclick="createCharacter()">Create Character</button>
+    </div>
+    
+    <script>
+        function generateContent() {
+            const instructions = document.getElementById('instructions').value;
+            const image = document.getElementById('imageUpload').files[0];
+            
+            if (instructions && image) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('preview').innerHTML = `
+                        <h3>Generated Content</h3>
+                        <img src="${event.target.result}" width="100%">
+                        <p>${instructions}</p>
+                        <audio controls id="speechAudio"></audio>
+                        <video id="generatedVideo" controls></video>
+                    `;
+                    generateSpeech(instructions);
+                    generateVideo(event.target.result, instructions);
+                };
+                reader.readAsDataURL(image);
+            } else {
+                alert('Please upload an image and provide instructions.');
+            }
+        }
+
+        function generateSpeech(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = 'en-US';
+            speech.rate = 1;
+            speech.volume = 1;
+            window.speechSynthesis.speak(speech);
+        }
+
+        function generateVideo(imageSrc, text) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.src = imageSrc;
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                ctx.fillStyle = "white";
+                ctx.font = "20px Arial";
+                ctx.fillText(text, 10, img.height - 30);
+                
+                const video = document.getElementById('generatedVideo');
+                video.src = canvas.toDataURL("video/webm");
+            };
+        }
+
+        function createCharacter() {
+            const characterName = prompt("Enter character name:");
+            if (characterName) {
+                const characterDiv = document.createElement("div");
+                characterDiv.innerHTML = `<h3>Character: ${characterName}</h3>`;
+                document.getElementById('preview').appendChild(characterDiv);
+            }
+        }
+    </script>
+</body>
+</html>
